@@ -4,8 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import UserSerializer
 from .models import User
-
-# Create your views here.
+from .spotify_helpers import search_artist_top_tracks, spotify_search_for_item
 
 # --------------------------- USER CRUD OPERATIONS --------------------------
 
@@ -45,7 +44,7 @@ def update_user(request, id):
     except User.DoesNotExist:
         return Response({"Error": f"User with {id} not found"}, status=status.HTTP_404_NOT_FOUND)
             
-     #Partially update with incoming data serializer Itemserializer(item, data-request.data, partial-True)
+     #Partially update with incoming data serializer UserSerializer(item, data-request.data, partial-True)
     serializer = UserSerializer(user_retrieved, data=request.data, partial=True)
     if serializer.is_valid():
         #Save only the fields provided 
@@ -68,3 +67,15 @@ def delete_user(request, id):
     user_retrieved.delete()
     
     return Response({"Response": f"User deletion completed successfully"}, status=status.HTTP_200_OK)
+
+
+# --------------------------- SPOTIFY API ----------------------------
+
+@api_view(['GET'])
+def get_artist_top_tracks(request, artist): 
+    return search_artist_top_tracks(artist)
+
+
+@api_view(['GET'])
+def search_item(request, item, type):
+    return spotify_search_for_item(item,type)

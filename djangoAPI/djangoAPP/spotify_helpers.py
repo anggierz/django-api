@@ -35,15 +35,19 @@ def get_spotify_token():
 def get_artist_id_by_name(artist: str, token: str):
     SPOTIFY_SEARCH = os.getenv("SPOTIFY_ENDPOINT_SEARCH")
   
-    url = f"{SPOTIFY_SEARCH}?q={artist}&type=artist"
-    
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-    
-    req = requests.get(url, headers=headers)
+    try:
+        url = f"{SPOTIFY_SEARCH}?q={artist}&type=artist"
+        
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+        
+        req = requests.get(url, headers=headers)
 
-    artist_id = req.json()['artists']['items'][0]['id']
+        artist_id = req.json()['artists']['items'][0]['id']
+    
+    except Exception as e:
+        print(e)
     
     return artist_id
 
@@ -53,7 +57,15 @@ def search_artist_top_tracks(artist: str):
     SPOTIFY_ARTISTS_URL = os.getenv("SPOTIFY_ENDPOINT_ARTISTS")
     
     spotify_token = get_spotify_token()
+    
+    if not spotify_token or "access_token" not in spotify_token:
+        return Response({"Error": f"Token not generated. Review your credentials."}, status=status.HTTP_400_BAD_REQUEST)
+    
     artist_id = get_artist_id_by_name(artist, spotify_token['access_token'])
+    
+    if not artist_id:
+        return Response({"Error": f"Artist's id couldn't be retrieved."}, status=status.HTTP_404_NOT_FOUND)
+    
     url = f"{SPOTIFY_ARTISTS_URL}/{artist_id}/top-tracks"
     
     headers = {
@@ -68,7 +80,7 @@ def search_artist_top_tracks(artist: str):
     # Limpiar la respuesta
     clean_response = clean_spotify_response(response.json(), "top-tracks")
     
-    return clean_response
+    return Response(clean_response, status=status.HTTP_200_OK)
 
 
 #Generic function to search for an item in spotify. Types avaulable are: album, artist, track
@@ -79,6 +91,10 @@ def spotify_search_for_item(item: str, type: str):
         return Response({"Error": f"Invalid type: {type}. Supported types are: album, artist, track"}, status=status.HTTP_400_BAD_REQUEST)
     
     spotify_token = get_spotify_token()
+    
+    if not spotify_token or "access_token" not in spotify_token:
+        return Response({"Error": f"Token not generated. Review your credentials."}, status=status.HTTP_400_BAD_REQUEST)
+        
     
     url = f"{SPOTIFY_SEARCH_URL}?q={item}&type={type}&limit=1"
     
@@ -94,7 +110,7 @@ def spotify_search_for_item(item: str, type: str):
     # Limpiar la respuesta
     clean_response = clean_spotify_response(response.json(), type)
     
-    return clean_response
+    return Response(clean_response, status=status.HTTP_200_OK)
 
 
 # Function to clean Spotify's response
