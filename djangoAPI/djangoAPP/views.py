@@ -40,7 +40,7 @@ def create_user(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-#Update User https://medium.com/@altafkhan_24475/patch-method-of-apiview-in-django-rest-framework-e7c0d574a47f
+#Update User
 @api_view(['PATCH'])
 def update_user(request, id):
     try:
