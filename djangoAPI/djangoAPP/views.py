@@ -11,16 +11,21 @@ from .spotify_helpers import search_artist_top_tracks, spotify_search_for_item
 #Get all users
 @api_view(['GET'])
 def get_users(request):
-    return Response(User.objects.all(), status=status.HTTP_200_OK)
+    users = User.objects.all()
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 #Get User By Id
 @api_view(['GET'])
 def get_user_by_id(request, id):
-    user = User.objects.filter(id=id)
-    if not user.exists():
-        return Response({'Error': f"User with id {id} not found in database"}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        #Retrieve the item by Id 
+        user_retrieved = User.objects.get(id=id) 
+    except User.DoesNotExist:
+        return Response({"Error": f"User with {id} not found"}, status=status.HTTP_404_NOT_FOUND)
     
-    return Response(user, status=status.HTTP_200_OK)
+    serializer = UserSerializer(user_retrieved)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 #Create User
